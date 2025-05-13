@@ -20,4 +20,7 @@ migration:
 	@uv run alembic revision --autogenerate -m $(name)
 
 migrate:
-		uv run alembic upgrade head
+	@uv run alembic upgrade head
+
+sync:
+	@uv sync -v
