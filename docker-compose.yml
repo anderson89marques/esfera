@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  esfera:
+    image: esfera
+    container_name: esfera
+    build: .
+    entrypoint: ./entrypoint.sh
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - esfera_database
+      - redis
+
+  esfera_database:
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_DB: app_db
+      POSTGRES_PASSWORD: app_password
+    ports:
+      - "5437:5432"
+
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379" 
+
+  celery_worker:
+    build: .
+    command: uv run celery -A src.tasks.process_csv worker --loglevel=info
+    volumes:
+      - .:/src
+    depends_on:
+      - esfera_database
+      - redis
+    env_file:
+      - .env
+    # environment:
+    #   - DATABASE_URL=postgresql://user:password@db/dbname
+    #   - CELERY_BROKER_URL=redis://redis:6379/0
+    #
+    #
+volumes:
+  pgdata:
